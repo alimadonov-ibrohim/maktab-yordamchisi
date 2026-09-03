@@ -24,6 +24,10 @@ services:
         sync: false
       - key: WEBAPP_URL
         value: https://frontend-three-amber-19.vercel.app
+      - key: SUPER_ADMIN_TELEGRAM_ID
+        value: "7916474913"
+      - key: SUPER_ADMIN_PHONE
+        value: "+998901234567"
 
 databases:
   - name: maktab-postgres
