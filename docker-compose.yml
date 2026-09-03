@@ -1,0 +1,70 @@
+name: school-assistant
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: school_assistant_postgres
+    environment:
+      POSTGRES_USER: school
+      POSTGRES_PASSWORD: school_password
+      POSTGRES_DB: school_assistant
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U school"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+    container_name: school_assistant_backend
+    environment:
+      DATABASE_URL: postgresql+asyncpg://school:school_password@postgres:5432/school_assistant
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      BOT_TOKEN: ${BOT_TOKEN:-}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY:-}
+      CORS_ORIGINS: '["http://localhost:5173","http://localhost:80"]'
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: >
+      sh -c "python seed.py &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000"
+
+  bot:
+    build:
+      context: .
+      dockerfile: bot/Dockerfile
+    container_name: school_assistant_bot
+    environment:
+      DATABASE_URL: postgresql+asyncpg://school:school_password@postgres:5432/school_assistant
+      BOT_TOKEN: ${BOT_TOKEN:-}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      backend:
+        condition: service_started
+    command: >
+      sh -c "python -m bot.bot"
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: school_assistant_frontend
+    environment:
+      VITE_API_URL: http://localhost:8000
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
