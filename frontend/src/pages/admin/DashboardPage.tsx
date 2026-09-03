@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react';
 import {
   getAdminStats, getSchools, getClasses, getStudents,
   getTeachers, getParents,
-} from '../services/admin';
+} from '../../services/admin';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Tooltip, Cell } from 'recharts';
-import Skeleton from './ui/Skeleton';
-import ErrorState from './ui/ErrorState';
-import type { AdminStats } from '../services/admin';
+import Skeleton from '../../components/ui/Skeleton';
+import ErrorState from '../../components/ui/ErrorState';
+import type { AdminStats } from '../../services/admin';
 
 interface DashboardPageProps {
   role: string;

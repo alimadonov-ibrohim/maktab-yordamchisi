@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import Skeleton from '../ui/Skeleton';
-import ErrorState from '../ui/ErrorState';
-import EmptyState from '../ui/EmptyState';
+import Skeleton from '../../components/ui/Skeleton';
+import ErrorState from '../../components/ui/ErrorState';
+import EmptyState from '../../components/ui/EmptyState';
 
 interface Column {
   key: string;
