@@ -110,11 +110,41 @@ async def handle_contact(message: Message):
         user = result.scalar_one_or_none()
 
         if not user:
-            await message.answer(
-                "❌ Telefon raqamingiz tizimda topilmadi.\n"
-                "Maktab administratoriga murojaat qiling.",
-            )
-            return
+            from app.config import settings
+            super_tg_ids = []
+            if settings.SUPER_ADMIN_TELEGRAM_ID:
+                super_tg_ids = [
+                    t.strip()
+                    for t in settings.SUPER_ADMIN_TELEGRAM_ID.split(",")
+                    if t.strip()
+                ]
+
+            if str(message.from_user.id) in super_tg_ids:
+                user = User(
+                    phone=phone,
+                    role="super_admin",
+                    telegram_id=message.from_user.id,
+                    first_name=message.from_user.first_name or "Super",
+                    last_name=message.from_user.last_name or "Admin",
+                    is_active=True,
+                )
+                db.add(user)
+                await db.flush()
+                await message.answer(
+                    f"✅ Assalomu alaykum, {user.first_name}!\n\n"
+                    "Siz <b>super admin</b> sifatida tizimga qo'shildingiz.\n\n"
+                    "Quyidagi tugmalardan foydalaning:",
+                    reply_markup=get_main_menu("super_admin"),
+                    parse_mode="HTML",
+                )
+                await db.commit()
+                return
+            else:
+                await message.answer(
+                    "❌ Telefon raqamingiz tizimda topilmadi.\n"
+                    "Maktab administratoriga murojaat qiling.",
+                )
+                return
 
         if not user.is_active:
             await message.answer(
@@ -153,11 +183,12 @@ async def handle_contact(message: Message):
                 reply_markup=get_main_menu("teacher"),
                 parse_mode="HTML",
             )
-        elif user.role == "admin":
+        elif user.role in ("admin", "school_admin", "super_admin"):
             await message.answer(
                 f"✅ Assalomu alaykum, {user.first_name}!\n\n"
                 "Siz <b>administrator</b> sifatida tizimga kirdingiz.\n\n"
-                "Web Dashboard: /dashboard",
+                "Quyidagi tugmalardan foydalaning:",
+                reply_markup=get_main_menu(user.role),
                 parse_mode="HTML",
             )
 

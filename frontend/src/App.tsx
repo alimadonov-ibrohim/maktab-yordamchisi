@@ -4,7 +4,6 @@ import { authenticateWithTelegram } from './services/auth';
 import ParentApp from './pages/ParentApp';
 import TeacherApp from './pages/TeacherApp';
 import AdminApp from './pages/AdminApp';
-import Login from './pages/Login';
 import LoadingScreen from './components/ui/LoadingScreen';
 import { hasAdminAccess } from './utils/roles';
 
@@ -34,12 +33,14 @@ export default function App() {
           localStorage.setItem('user_id', String(res.user_id));
           setRole(res.role);
           setAuthed(true);
+        } else {
+          setError('Telegram WebApp dan oching.');
         }
       } catch (e: any) {
         if (e?.response?.status === 404) {
-          setError('');
+          setError('Hisobingiz topilmadi. Admin bilan bog\'laning.');
         } else {
-          setError('Ma\'lumotni yuklashda xatolik yuz berdi.');
+          setError('Xatolik yuz berdi. Qayta urinib ko\'ring.');
         }
       }
       setLoading(false);
@@ -61,10 +62,17 @@ export default function App() {
   }
 
   if (!authed) {
-    return <Login onSuccess={() => {
-      setRole(localStorage.getItem('role'));
-      setAuthed(true);
-    }} error={error} />;
+    return (
+      <div className="min-h-screen bg-dark-bg flex flex-col items-center justify-center p-6">
+        <div className="w-full max-w-sm text-center space-y-4">
+          <div className="w-20 h-20 rounded-3xl bg-primary-600 flex items-center justify-center text-4xl mx-auto">
+            🎓
+          </div>
+          <h1 className="text-2xl font-bold">Maktab Yordamchisi</h1>
+          <p className="text-dark-muted">{error || 'Yuklanmoqda...'}</p>
+        </div>
+      </div>
+    );
   }
 
   const isAdmin = hasAdminAccess(role || '');

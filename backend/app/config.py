@@ -1,13 +1,27 @@
 import os
+import json
 from typing import List
 from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"))
 
 # Backend papkasining absolute pathi (config.py joylashgan: backend/app/config.py)
 BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEFAULT_SQLITE_PATH = os.path.join(BACKEND_DIR, "school_assistant.db")
+
+
+def _parse_cors_list():
+    raw = os.getenv("CORS_ORIGINS", "")
+    if not raw:
+        return ["http://localhost:5173", "http://localhost:3000"]
+    try:
+        parsed = json.loads(raw)
+        if isinstance(parsed, list):
+            return parsed
+    except json.JSONDecodeError:
+        pass
+    return [s.strip() for s in raw.split(",")]
 
 
 class Settings(BaseSettings):
@@ -24,10 +38,7 @@ class Settings(BaseSettings):
     FIREBASE_CREDENTIALS: str = os.getenv("FIREBASE_CREDENTIALS", "")
     SMS_API_KEY: str = os.getenv("SMS_API_KEY", "")
     SMS_API_URL: str = os.getenv("SMS_API_URL", "")
-    CORS_ORIGINS: List[str] = [
-        "http://localhost:5173",
-        "http://localhost:3000",
-    ]
+    CORS_ORIGINS: List[str] = _parse_cors_list()
     DEFAULT_SCHOOL_START_TIME: str = os.getenv(
         "DEFAULT_SCHOOL_START_TIME", "08:00"
     )
